@@ -1,8 +1,7 @@
 // Marcos Vinicius Peres RA: 94594
-// João Vitor Malvestio da Silva RA: 93089
+// Joï¿½o Vitor Malvestio da Silva RA: 93089
 #include <stdio.h>
 #include <string.h>
-#include <conio.h>
 #define TAM_MAX 20000
 
 void inicializacao(char primeiraSequencia[], char segundaSequencia[]);
@@ -10,7 +9,7 @@ void matrizDeScore(char primeiraSequencia[], char segundaSequencia[]);
 void printMatriz(char primeiraSequencia[], char segundaSequencia[]);
 int MAIOR(int a, int b);
 
-long int matriz[TAM_MAX][TAM_MAX];
+int matriz[TAM_MAX][TAM_MAX];
 int match = 1;
 int missmatch = -1;
 int gap = -1; 
@@ -57,16 +56,16 @@ int main(){
 }
 
 void inicializacao(char primeiraSequencia[], char segundaSequencia[]){
-    long int tamanhoPrimeiraSequencia = strlen(primeiraSequencia);
-    long int tamanhoSegundaSequencia = strlen(segundaSequencia);
+    int tamanhoPrimeiraSequencia = strlen(primeiraSequencia);
+    int tamanhoSegundaSequencia = strlen(segundaSequencia);
     
 	matriz[0][0] = 0;
     
-    for (long int i = 0; i < tamanhoPrimeiraSequencia +  1; i++) {    	
+    for (int i = 0; i < tamanhoPrimeiraSequencia +  1; i++) {    	
         matriz[i][0] = i == 0 ? 0 : matriz[i-1][0] + (gap); 
     }
 
-    for (long int j = 0; j < tamanhoSegundaSequencia + 1; j++) {    	
+    for (int j = 0; j < tamanhoSegundaSequencia + 1; j++) {    	
         matriz[0][j] = j == 0 ? 0 : matriz[0][j-1] + (gap);
     }
 }

@@ -1,21 +1,30 @@
 // Marcos Vinicius Peres RA: 94594
-// João Vitor Malvestio da Silva RA: 93089
+// Joï¿½o Vitor Malvestio da Silva RA: 93089
 #include <stdio.h>
 #include <string.h>
-#include <conio.h>
+#include <mpi.h>
 #define TAM_MAX 20000
 
-void inicializacao(char primeiraSequencia[], char segundaSequencia[]);
+void inicializacao(char primeiraSequencia[], char segundaSequencia[], int idProc);
 void matrizDeScore(char primeiraSequencia[], char segundaSequencia[]);
 void printMatriz(char primeiraSequencia[], char segundaSequencia[]);
 int MAIOR(int a, int b);
 
-long int matriz[TAM_MAX][TAM_MAX];
+int matriz[TAM_MAX][TAM_MAX];
 int match = 1;
 int missmatch = -1;
 int gap = -1; 
 
 int main(){	
+	int id, num_processos, i;
+
+	MPI_Init(NULL, NULL);
+
+	MPI_Comm_rank(MPI_COMM_WORLD, &id);
+	MPI_Comm_size(MPI_COMM_WORLD, &num_processos);
+
+	printf("Processo %d entre os %d\n", id, num_processos);
+
 	FILE *arq;
 	char primeiraSequencia[TAM_MAX]; 
     char segundaSequencia[TAM_MAX];
@@ -44,34 +53,57 @@ int main(){
 	  	segundaSequencia[strcspn(segundaSequencia, "\n")] = 0;
 	}
 	
-	fclose(arq);	
+	fclose(arq);
+
+	if (id == 0) {
+		printf("Primeira Sequencia: %s \n", primeiraSequencia);
+    	printf("Segunda Sequencia: %s \n", segundaSequencia);
+	}
+
+	int flag = 1;
+
+	if (id == 0) {
+		MPI_Send(&flag, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);	    			
+	} else if (id == 1) {
+		MPI_Recv(&flag, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
 	
-	printf("Primeira Sequencia: %s \n", primeiraSequencia);    
-    printf("Segunda Sequencia: %s \n", segundaSequencia);
-    	
-    inicializacao(primeiraSequencia, segundaSequencia);
+    inicializacao(primeiraSequencia, segundaSequencia, id);
+
+	if (id == 0) {
+		MPI_Send(&flag, 1, MPI_INT, 1, 1, MPI_COMM_WORLD);	    			
+	} else if (id == 1) {
+		MPI_Recv(&flag, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+
     matrizDeScore(primeiraSequencia, segundaSequencia);
     printMatriz(primeiraSequencia, segundaSequencia);
+
+	MPI_Finalize();
     
 	return 0;
 }
 
-void inicializacao(char primeiraSequencia[], char segundaSequencia[]){
-    long int tamanhoPrimeiraSequencia = strlen(primeiraSequencia);
-    long int tamanhoSegundaSequencia = strlen(segundaSequencia);
+void inicializacao(char primeiraSequencia[], char segundaSequencia[], int idProc) {
+    int tamanhoPrimeiraSequencia = strlen(primeiraSequencia);
+    int tamanhoSegundaSequencia = strlen(segundaSequencia);
     
 	matriz[0][0] = 0;
     
-    for (long int i = 0; i < tamanhoPrimeiraSequencia +  1; i++) {    	
+	if (idProc == 0) {
+		for (int i = 0; i < tamanhoPrimeiraSequencia +  1; i++) {    	
         matriz[i][0] = i == 0 ? 0 : matriz[i-1][0] + (gap); 
-    }
+		}	
+	}
 
-    for (long int j = 0; j < tamanhoSegundaSequencia + 1; j++) {    	
-        matriz[0][j] = j == 0 ? 0 : matriz[0][j-1] + (gap);
-    }
+	if (idProc == 1) {
+		for (int j = 0; j < tamanhoSegundaSequencia + 1; j++) {    	
+			matriz[0][j] = j == 0 ? 0 : matriz[0][j-1] + (gap);
+		}
+	}
 }
 
-void matrizDeScore(char primeiraSequencia[], char segundaSequencia []){
+void matrizDeScore(char primeiraSequencia[], char segundaSequencia []) {
     int tamanhoPrimeiraSequencia = strlen(primeiraSequencia);
     int tamanhoSegundaSequencia = strlen(segundaSequencia);
 
@@ -132,5 +164,5 @@ void printMatriz(char primeiraSequencia[], char segundaSequencia []){
         }
 
     }
-
+	printf("\n");
 }

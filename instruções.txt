@@ -6,9 +6,9 @@ Nossa quantidade de thread é fixa e não parametrizável.
 Para executar e compilar o programa deve-se ter instalado em sua máquina o compilador GCC ou Clang. No caso de uso de Linux o GCC já vem instalado por padrão, caso você queira usar o Clang basta usar esse tutorial de instalação e de como usar, acessando este site: https://clang.llvm.org/get_started.html
 
 Nós utilizamos para buildar o nosso programa sequencial o comando do GCC:
-   	gcc -g -c -std=c99 NeedlemanWunschSequecial.c
-   	gcc -g -o NeedlemanWunschSequecial.o
+   	make sequecial.out
+   	./a.out
 
 Nós utilizamos para buildar o nosso programa com threads o comando do GCC:
-	gcc -g -c -std=c99 NeedlemanWunschWithThread.c
-   	gcc -g -o NeedlemanWunschWithThread.o
+	make mpi.out
+   	./a.out
