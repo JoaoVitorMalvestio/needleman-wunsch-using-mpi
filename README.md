@@ -1,1 +1,0 @@
-# needleman-wunsch-using-mpi
