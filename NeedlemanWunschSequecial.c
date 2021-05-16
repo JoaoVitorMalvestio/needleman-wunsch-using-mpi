@@ -50,7 +50,7 @@ int main(){
     	
     inicializacao(primeiraSequencia, segundaSequencia);
     matrizDeScore(primeiraSequencia, segundaSequencia);
-    //printMatriz(primeiraSequencia, segundaSequencia);
+    printMatriz(primeiraSequencia, segundaSequencia);
     
 	return 0;
 }

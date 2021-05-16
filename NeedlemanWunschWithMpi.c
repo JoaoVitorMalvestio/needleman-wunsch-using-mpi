@@ -4,9 +4,10 @@
 #include <string.h>
 #include <mpi.h>
 #define TAM_MAX 20000
+#define ROOT_ID 0
 
-void inicializacao(char primeiraSequencia[], char segundaSequencia[], int idProc);
-void matrizDeScore(char primeiraSequencia[], char segundaSequencia[]);
+void inicializacao(char primeiraSequencia[], char segundaSequencia[]);
+void matrizDeScore(char primeiraSequencia[], char segundaSequencia[], int id);
 void printMatriz(char primeiraSequencia[], char segundaSequencia[]);
 int MAIOR(int a, int b);
 
@@ -19,6 +20,7 @@ int main(){
 	int id, num_processos, i;
 
 	MPI_Init(NULL, NULL);
+	MPI_Status status;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_processos);
@@ -55,67 +57,63 @@ int main(){
 	
 	fclose(arq);
 
-	if (id == 0) {
+	if (id == ROOT_ID) {
 		printf("Primeira Sequencia: %s \n", primeiraSequencia);
     	printf("Segunda Sequencia: %s \n", segundaSequencia);
-	}
-
-	int flag = 1;
-
-	if (id == 0) {
-		MPI_Send(&flag, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);	    			
-	} else if (id == 1) {
-		MPI_Recv(&flag, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	}
+	}	
 	
-    inicializacao(primeiraSequencia, segundaSequencia, id);
+    inicializacao(primeiraSequencia, segundaSequencia);
 
-	if (id == 0) {
-		MPI_Send(&flag, 1, MPI_INT, 1, 1, MPI_COMM_WORLD);	    			
-	} else if (id == 1) {
-		MPI_Recv(&flag, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	MPI_Barrier(MPI_COMM_WORLD);
+
+    matrizDeScore(primeiraSequencia, segundaSequencia, id);
+
+	if (id == ROOT_ID) {
+		printMatriz(primeiraSequencia, segundaSequencia);	
 	}
-
-    matrizDeScore(primeiraSequencia, segundaSequencia);
-    printMatriz(primeiraSequencia, segundaSequencia);
 
 	MPI_Finalize();
     
 	return 0;
 }
 
-void inicializacao(char primeiraSequencia[], char segundaSequencia[], int idProc) {
+void inicializacao(char primeiraSequencia[], char segundaSequencia[]) {
     int tamanhoPrimeiraSequencia = strlen(primeiraSequencia);
     int tamanhoSegundaSequencia = strlen(segundaSequencia);
     
 	matriz[0][0] = 0;
     
-	if (idProc == 0) {
-		for (int i = 0; i < tamanhoPrimeiraSequencia +  1; i++) {    	
+	for (int i = 0; i < tamanhoPrimeiraSequencia +  1; i++) {    	
         matriz[i][0] = i == 0 ? 0 : matriz[i-1][0] + (gap); 
-		}	
-	}
-
-	if (idProc == 1) {
-		for (int j = 0; j < tamanhoSegundaSequencia + 1; j++) {    	
-			matriz[0][j] = j == 0 ? 0 : matriz[0][j-1] + (gap);
-		}
+	}	
+		
+	for (int j = 0; j < tamanhoSegundaSequencia + 1; j++) {    	
+		matriz[0][j] = j == 0 ? 0 : matriz[0][j-1] + (gap);
 	}
 }
 
-void matrizDeScore(char primeiraSequencia[], char segundaSequencia []) {
+void matrizDeScore(char primeiraSequencia[], char segundaSequencia [], int id) {
     int tamanhoPrimeiraSequencia = strlen(primeiraSequencia);
     int tamanhoSegundaSequencia = strlen(segundaSequencia);
+	MPI_Status status;
 
+	int num_processos;
+
+	MPI_Comm_size(MPI_COMM_WORLD, &num_processos);
     
-    for (int i = 1; i < tamanhoPrimeiraSequencia + 1; i++) {
-        for (int j = 1; j < tamanhoSegundaSequencia + 1; j++) {
+    for (int i = id + 1; i < tamanhoPrimeiraSequencia + 1; i += num_processos) {
+        for (int j = 1; j < tamanhoSegundaSequencia + 1; j++) {			
+			if (id != ROOT_ID) {
+				int linhaRecebida[TAM_MAX];
+				MPI_Recv(&linhaRecebida, tamanhoPrimeiraSequencia, MPI_INT, id - 1, i - 1, MPI_COMM_WORLD, &status);				
+				memcpy(&matriz[i - 1], &linhaRecebida, sizeof(int)*TAM_MAX);
+			}
         
             int valorDiagonal = 0;
 			
             if (primeiraSequencia[i-1] == segundaSequencia[j-1]) {
 			    valorDiagonal = matriz[i - 1][j - 1] + match;
-            }else{
+            } else {
 			    valorDiagonal = matriz[i - 1][j - 1] + missmatch;
             }
     
@@ -124,7 +122,23 @@ void matrizDeScore(char primeiraSequencia[], char segundaSequencia []) {
             int maximoScore = MAIOR(MAIOR(valorDiagonal, valorEsquerda), valorCima);
             
             matriz[i][j] = maximoScore;
+
+			if (id != num_processos - 1) {
+				MPI_Send(&matriz[i], tamanhoPrimeiraSequencia, MPI_INT, id + 1, i, MPI_COMM_WORLD);
+			}
         }
+		if (id == ROOT_ID) {
+			for (int k = 1; k < num_processos; k++) {
+
+				if (i + k < tamanhoPrimeiraSequencia) {
+					int linhaRecebida[TAM_MAX];
+					MPI_Recv(&linhaRecebida, tamanhoPrimeiraSequencia + 1, MPI_INT, id + k, i + k, MPI_COMM_WORLD, &status);					
+					memcpy(&matriz[i + k], &linhaRecebida, sizeof(int)*TAM_MAX);					
+				}
+			}
+		} else {
+			MPI_Send(&matriz[i], tamanhoPrimeiraSequencia + 1, MPI_INT, ROOT_ID, i, MPI_COMM_WORLD);
+		}
     }
 }
 

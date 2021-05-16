@@ -6,11 +6,8 @@ a.out: clean NeedlemanWunschWithMpi.o
 mpi.out: clean NeedlemanWunschWithMpi.o
 	mpicc -g NeedlemanWunschWithMpi.o
 
-sequecial.out: clean NeedlemanWunschSequecial.o
-	cc -g NeedlemanWunschSequecial.o
-
-NeedlemanWunschSequecial.o: NeedlemanWunschSequecial.c
-	mpicc NeedlemanWunschSequecial.c -o NeedlemanWunschSequecial.o
+sequecial.out: NeedlemanWunschSequecial.c
+	cc NeedlemanWunschSequecial.c -o a.out
 
 NeedlemanWunschWithMpi.o: NeedlemanWunschWithMpi.c
 	mpicc -g -c NeedlemanWunschWithMpi.c
