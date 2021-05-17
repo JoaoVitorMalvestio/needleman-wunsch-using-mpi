@@ -9,4 +9,4 @@ Nós utilizamos para buildar o nosso programa sequencial o comando do GCC:
 
 Nós utilizamos para buildar o nosso programa com threads o comando do GCC:
 	make
-   	mpirun -np 4 a.out
+   	mpirun -np 1 a.out
