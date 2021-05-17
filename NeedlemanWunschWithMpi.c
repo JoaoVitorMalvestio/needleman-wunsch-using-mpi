@@ -14,9 +14,11 @@ int MAIOR(int a, int b);
 int matriz[TAM_MAX][TAM_MAX];
 int match = 1;
 int missmatch = -1;
-int gap = -1; 
+int gap = -1;
 
 int main(){	
+	double initialTime = MPI_Wtime();
+
 	int id, num_processos, i;
 
 	MPI_Init(NULL, NULL);
@@ -72,7 +74,15 @@ int main(){
 		printMatriz(primeiraSequencia, segundaSequencia);	
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
+	double endTime = MPI_Wtime();
+	
+	if (id == ROOT_ID) {
+		printf("Tempo de execução %fs\n", endTime - initialTime);
+	}
+	
 	MPI_Finalize();
+
     
 	return 0;
 }
